@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  tasks:
+  - name: pull the war file from jfrog
+    command: curl -u admin:Admin@123 "http://3.18.220.70:8082/artifactory/libs-release/com/iwayq/iwayQApp/1.0-RELEASE/iwayQApp-1.0-RELEASE.war" --output /opt/ansible/new.war 
+  - name: build the dockerfile
+    command: docker build -t test /opt/ansible
+  - name: login to dockerhub
+    command: docker login -u sidharth034 -p sidharth034
+  - name: tag the image
+    command: docker tag test:latest sidharth034/test:latest
+  - name: push image to dockerhub
+    command: docker push sidharth034/test:latest
+  - name: delete the image
+    command: docker rmi test:latest
+    command: docker rmi sidharth034/test:latest

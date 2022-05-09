@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+    stages {
+        stage('git clone') {
+            steps{
+                git branch: 'master',
+                url: 'https://sidharth034@bitbucket.org/sidharth034/devops-pipeline-project.git'
+            }
+        }
+        stage('build'){
+            steps{
+                sh '''
+                cd java-source
+                pwd
+                mvn package
+                '''
+                }
+        }
+        stage('sonarqube'){
+            steps{
+                withSonarQubeEnv('my-sonarqube'){
+                    sh '''cd java-source 
+                    mvn sonar:sonar
+                    '''
+                }
+            }
+        }
+        stage('push to ansible'){
+            steps{
+                sshagent(['private-key']) {
+                sh 'scp -o StrictHostKeyChecking=no dockerfile docker-build.yml sidharth@172.31.36.16:/opt/ansible'
+                sh 'ssh sidharth@172.31.36.16 sudo ansible-playbook /opt/ansible/docker-build.yml'
+}
+            }
+        }
+        stage('Kubernetes apply'){
+            steps{
+                sshagent(['private-key']) {
+                sh 'scp -o StrictHostKeyChecking=no kubenetes.yaml sidharth@18.188.205.114:/opt/kubernetes'
+                sh 'kubectl apply -f kubernetes.yaml'
+                }
+            }
+        }
+   //     stage('deploy'){
+     //       steps{
+       //         sshagent(['ssh-key']) {
+         //       sh 'scp -o StrictHostKeyChecking=no webapp/target/webapp.war ubuntu@18.188.207.41:/opt/tomcat/webapps'
+         //       }
+//            }
+  //      }
+          
+    }
+}
